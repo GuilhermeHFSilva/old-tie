@@ -1,0 +1,303 @@
+/* Arena CSS - Matching Protótipos Figura 4, 5, 6 e 7 do PDF */
+
+.arena-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    margin-bottom: 16px;
+}
+
+.room-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.title-badge {
+    background: #0284c7;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.title-sub {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.scoreboard-badge {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.scoreboard-badge b {
+    color: var(--btn-green);
+    font-size: 1rem;
+}
+
+/* Arena Grid */
+.arena-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 16px;
+    flex: 1;
+}
+
+@media (max-width: 850px) {
+    .arena-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.game-area {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Turn Banner (Figura 4 & 5) */
+.turn-banner {
+    width: 100%;
+    background: #064e3b;
+    border: 1px solid #10b981;
+    color: #a7f3d0;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.turn-banner.opponent-turn {
+    background: #312e81;
+    border-color: #6366f1;
+    color: #c7d2fe;
+}
+
+/* Board 3x3 */
+.board-wrapper {
+    width: 100%;
+    max-width: 340px;
+    aspect-ratio: 1;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+}
+
+.board.disabled {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.cell {
+    background: #0d1117;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif;
+    font-size: 3.2rem;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    outline: none;
+    user-select: none;
+}
+
+.cell:hover:not(.x):not(.o) {
+    background: #161b22;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cell.x {
+    color: var(--color-x);
+    text-shadow: 0 0 12px var(--color-x-glow);
+    cursor: default;
+}
+
+.cell.o {
+    color: var(--color-o);
+    text-shadow: 0 0 12px var(--color-o-glow);
+    cursor: default;
+}
+
+.cell.winning-cell {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.04); }
+}
+
+/* Chat Module (Figura 4 & 5) */
+.chat-area {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    height: 480px;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 12px;
+}
+
+.chat-header h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #e6edf3;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.85rem;
+    padding-right: 4px;
+}
+
+.chat-msg {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    word-break: break-word;
+}
+
+.chat-msg .sender {
+    font-weight: 700;
+    color: var(--btn-blue);
+    margin-right: 4px;
+}
+
+.chat-system-msg {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.chat-input-form {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Modal Game Over (Figura 6 & 7) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-card {
+    max-width: 440px;
+    width: 90%;
+    padding: 24px;
+    text-align: center;
+}
+
+.modal-header-banner {
+    margin-bottom: 20px;
+}
+
+.modal-trophy {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.modal-header-banner h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #10b981;
+}
+
+.modal-header-banner p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.modal-summary-card {
+    background: #0d1117;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 20px;
+    text-align: left;
+    font-size: 0.85rem;
+}
+
+.modal-summary-card h4 {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.highlight-score {
+    color: var(--btn-green);
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-waiting-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 12px;
+}

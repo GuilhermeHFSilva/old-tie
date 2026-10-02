@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Multiplayer - Lobby de Salas (WS3)</title>
+    <meta name="description" content="Jogo da Velha Multiplayer em Tempo Real via WebSocket">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/arena.css">
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Header Principal -->
+        <header class="main-header">
+            <div class="logo">
+                <span class="grid-icon">⊞</span>
+                <span class="logo-text">TIC-TAC-TOE MULTIPLAYER — LOBBY DE SALAS</span>
+            </div>
+            <div id="connection-status" class="connection-status online">
+                <span class="status-dot"></span>
+                <span class="status-text">SERVIDOR ONLINE</span>
+            </div>
+        </header>
+
+        <!-- TELA 1: LOBBY DE SALAS (tela1-lobby.html) -->
+        <section id="lobby-screen" class="screen active">
+            <div class="lobby-grid">
+                <!-- Painel Esquerdo: Partida Rápida / Criar Sala -->
+                <div class="lobby-panel glass-panel">
+                    <div class="panel-header">
+                        <span class="icon">⚡</span>
+                        <h3>PARTIDA RÁPIDA (MATCHMAKING)</h3>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nickname-input">Seu Apelido de Jogador:</label>
+                        <input type="text" id="nickname-input" placeholder="Ex: Joao_Gamer" value="Joao_Gamer" maxlength="20">
+                    </div>
+
+                    <button id="btn-quick-match" class="btn btn-success btn-block btn-lg">
+                        <span>JOGAR AGORA (BUSCAR OPONENTE)</span>
+                        <small>Encontra um adversário aleatório online</small>
+                    </button>
+
+                    <div class="divider">OU</div>
+
+                    <div class="form-group">
+                        <label for="room-code-input">Código da Sala (6 caracteres):</label>
+                        <input type="text" id="room-code-input" placeholder="Ex: ABC123" maxlength="6" class="code-input">
+                    </div>
+
+                    <div class="lobby-btn-group">
+                        <button id="btn-create-private" class="btn btn-primary btn-block">
+                            <span>➕ CRIAR SALA PRIVADA</span>
+                        </button>
+                        <button id="btn-join-code" class="btn btn-secondary btn-block">
+                            <span>🚀 ENTRAR COM CÓDIGO</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Painel Direito: Salas Públicas Disponíveis -->
+                <div class="lobby-panel glass-panel">
+                    <div class="panel-header flex-between">
+                        <div>
+                            <span class="icon">🏛️</span>
+                            <h3>SALAS PÚBLICAS DISPONÍVEIS</h3>
+                        </div>
+                        <button id="btn-refresh-rooms" class="btn-icon" title="Atualizar">🔄</button>
+                    </div>
+
+                    <table class="rooms-table">
+                        <thead>
+                            <tr>
+                                <th>CÓDIGO</th>
+                                <th>HOST</th>
+                                <th>VAGAS</th>
+                                <th>AÇÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rooms-table-body">
+                            <tr>
+                                <td colspan="4" class="empty-list">Buscando salas disponíveis...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA 2: ARENA DE JOGO (tela2-arena.html) -->
+        <section id="arena-screen" class="screen">
+            <!-- Barra de Cabeçalho da Arena -->
+            <div class="arena-header glass-panel">
+                <div class="room-title">
+                    <span id="arena-room-code" class="title-badge">SALA ABC123</span>
+                    <span class="title-sub">— JOGO DA VELHA MULTIPLAYER</span>
+                </div>
+                <div id="arena-scoreboard" class="scoreboard-badge">
+                    PLACAR: <span id="score-host-name">Host</span> <b id="score-host-val">0</b> × <b id="score-visitante-val">0</b> <span id="score-visitante-name">Visitante</span>
+                </div>
+                <button id="btn-leave-arena" class="btn btn-danger btn-sm">Sair do Lobby</button>
+            </div>
+
+            <div class="arena-grid">
+                <!-- Tabuleiro 3x3 + Turn Banner -->
+                <div class="game-area glass-panel">
+                    <!-- Turn Banner com Cronômetro de 15s -->
+                    <div id="turn-banner" class="turn-banner">
+                        <span class="play-icon">▶</span>
+                        <span id="turn-banner-text">VOCÊ É O 'X' | SUA VEZ DE JOGAR! (Cronômetro: 15s)</span>
+                    </div>
+
+                    <!-- Matriz 3x3 -->
+                    <div class="board-wrapper">
+                        <div id="board" class="board disabled">
+                            <button class="cell" data-index="0"></button>
+                            <button class="cell" data-index="1"></button>
+                            <button class="cell" data-index="2"></button>
+                            <button class="cell" data-index="3"></button>
+                            <button class="cell" data-index="4"></button>
+                            <button class="cell" data-index="5"></button>
+                            <button class="cell" data-index="6"></button>
+                            <button class="cell" data-index="7"></button>
+                            <button class="cell" data-index="8"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat da Partida Integrado -->
+                <div class="chat-area glass-panel">
+                    <div class="chat-header">
+                        <span>💬</span>
+                        <h3>CHAT DA PARTIDA</h3>
+                    </div>
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="chat-system-msg">Bem-vindo ao chat ao vivo!</div>
+                    </div>
+                    <form id="chat-form" class="chat-input-form">
+                        <input type="text" id="chat-input" placeholder="Digite a mensagem..." maxlength="200" autocomplete="off">
+                        <button type="submit" class="btn btn-primary">Enviar</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELA 3: MODAL FIM DE JOGO / GAME OVER (tela3-gameover.html) -->
+        <div id="modal-gameover" class="modal-overlay">
+            <div class="modal-card glass-panel">
+                <div class="modal-header-banner" id="modal-header-banner">
+                    <span class="modal-trophy">🏆</span>
+                    <h2 id="modal-result-title">[!] VITÓRIA! VOCÊ VENCEU!</h2>
+                    <p id="modal-result-sub">Três símbolos alinhados!</p>
+                </div>
+
+                <div class="modal-summary-card">
+                    <h4>RESUMO DA PARTIDA</h4>
+                    <div class="summary-item">
+                        <span>Vencedor:</span>
+                        <strong id="summary-winner">João_Gamer ('X')</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span>Novo Placar Geral:</span>
+                        <strong id="summary-score" class="highlight-score">João_Gamer 1 x 0 Maria_S</strong>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="btn-rematch" class="btn btn-success btn-block btn-lg">
+                        <span>🔄 SOLICITAR REVANCHE [WS]</span>
+                    </button>
+                    <button id="btn-back-lobby" class="btn btn-secondary btn-block">
+                        <span>VOLTAR AO LOBBY</span>
+                    </button>
+                </div>
+
+                <p id="modal-waiting-text" class="modal-waiting-text">[Aguardando resposta do oponente via WebSocket...]</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/socket.js"></script>
+    <script src="js/lobby.js"></script>
+    <script src="js/arena.js"></script>
+</body>
+</html>

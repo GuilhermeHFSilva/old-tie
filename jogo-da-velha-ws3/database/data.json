@@ -1,0 +1,184 @@
+{
+  "jogadores": [
+    {
+      "id": 1,
+      "nickname": "Joao_Gamer",
+      "email": "",
+      "vitorias_totais": 0,
+      "derrotas_totais": 0,
+      "created_at": "2026-09-24T00:29:07.283Z"
+    },
+    {
+      "id": 2,
+      "nickname": "Peida Leite",
+      "email": "",
+      "vitorias_totais": 0,
+      "derrotas_totais": 0,
+      "created_at": "2026-09-24T00:32:42.161Z"
+    },
+    {
+      "id": 3,
+      "nickname": "Biricutico",
+      "email": "",
+      "vitorias_totais": 0,
+      "derrotas_totais": 0,
+      "created_at": "2026-09-24T00:32:48.529Z"
+    }
+  ],
+  "salas": [
+    {
+      "id": 1,
+      "codigo_sala": "4D5G2J",
+      "nome": "Sala de Joao_Gamer",
+      "id_jogador_host": 1,
+      "id_jogador_visitante": null,
+      "privada": false,
+      "status_sala": "AGUARDANDO",
+      "created_at": "2026-09-24T00:29:07.290Z"
+    },
+    {
+      "id": 2,
+      "codigo_sala": "6LPQBW",
+      "nome": "Sala de Peida Leite",
+      "id_jogador_host": 2,
+      "id_jogador_visitante": 3,
+      "privada": false,
+      "status_sala": "EM_JOGO",
+      "created_at": "2026-09-24T00:32:42.186Z",
+      "updated_at": "2026-09-24T00:33:03.630Z"
+    },
+    {
+      "id": 3,
+      "codigo_sala": "N63AMQ",
+      "nome": "Sala de Biricutico",
+      "id_jogador_host": 3,
+      "id_jogador_visitante": null,
+      "privada": false,
+      "status_sala": "AGUARDANDO",
+      "created_at": "2026-09-24T00:32:48.533Z"
+    }
+  ],
+  "partidas": [
+    {
+      "id": 1,
+      "id_sala": 2,
+      "id_vencedor": null,
+      "simbolo_turno_atual": "X",
+      "placar_host": 0,
+      "placar_visitante": 0,
+      "status_resultado": "EMPATE",
+      "data_hora_inicio": "2026-09-24T00:33:03.632Z",
+      "created_at": "2026-09-24T00:33:03.633Z",
+      "updated_at": "2026-09-24T00:33:38.765Z"
+    }
+  ],
+  "jogadas": [
+    {
+      "id": 1,
+      "id_partida": 1,
+      "id_jogador": 2,
+      "posicao_celula": 6,
+      "simbolo": "X",
+      "timestamp_jogada": "2026-09-24T00:33:16.234Z",
+      "created_at": "2026-09-24T00:33:16.235Z"
+    },
+    {
+      "id": 2,
+      "id_partida": 1,
+      "id_jogador": 3,
+      "posicao_celula": 4,
+      "simbolo": "O",
+      "timestamp_jogada": "2026-09-24T00:33:18.716Z",
+      "created_at": "2026-09-24T00:33:18.720Z"
+    },
+    {
+      "id": 3,
+      "id_partida": 1,
+      "id_jogador": 2,
+      "posicao_celula": 0,
+      "simbolo": "X",
+      "timestamp_jogada": "2026-09-24T00:33:23.852Z",
+      "created_at": "2026-09-24T00:33:23.853Z"
+    },
+    {
+      "id": 4,
+      "id_partida": 1,
+      "id_jogador": 3,
+      "posicao_celula": 3,
+      "simbolo": "O",
+      "timestamp_jogada": "2026-09-24T00:33:26.390Z",
+      "created_at": "2026-09-24T00:33:26.392Z"
+    },
+    {
+      "id": 5,
+      "id_partida": 1,
+      "id_jogador": 2,
+      "posicao_celula": 5,
+      "simbolo": "X",
+      "timestamp_jogada": "2026-09-24T00:33:27.840Z",
+      "created_at": "2026-09-24T00:33:27.841Z"
+    },
+    {
+      "id": 6,
+      "id_partida": 1,
+      "id_jogador": 3,
+      "posicao_celula": 8,
+      "simbolo": "O",
+      "timestamp_jogada": "2026-09-24T00:33:31.087Z",
+      "created_at": "2026-09-24T00:33:31.088Z"
+    },
+    {
+      "id": 7,
+      "id_partida": 1,
+      "id_jogador": 2,
+      "posicao_celula": 1,
+      "simbolo": "X",
+      "timestamp_jogada": "2026-09-24T00:33:35.487Z",
+      "created_at": "2026-09-24T00:33:35.489Z"
+    },
+    {
+      "id": 8,
+      "id_partida": 1,
+      "id_jogador": 3,
+      "posicao_celula": 2,
+      "simbolo": "O",
+      "timestamp_jogada": "2026-09-24T00:33:36.944Z",
+      "created_at": "2026-09-24T00:33:36.945Z"
+    },
+    {
+      "id": 9,
+      "id_partida": 1,
+      "id_jogador": 2,
+      "posicao_celula": 7,
+      "simbolo": "X",
+      "timestamp_jogada": "2026-09-24T00:33:38.761Z",
+      "created_at": "2026-09-24T00:33:38.762Z"
+    }
+  ],
+  "mensagensChat": [
+    {
+      "id": 1,
+      "id_sala": 2,
+      "id_jogador_remetente": 2,
+      "conteudo_texto": "Oi bb",
+      "timestamp_envio": "2026-09-24T00:32:58.882Z",
+      "created_at": "2026-09-24T00:32:58.884Z"
+    },
+    {
+      "id": 2,
+      "id_sala": 2,
+      "id_jogador_remetente": 3,
+      "conteudo_texto": "a",
+      "timestamp_envio": "2026-09-24T00:33:06.686Z",
+      "created_at": "2026-09-24T00:33:06.688Z"
+    },
+    {
+      "id": 3,
+      "id_sala": 2,
+      "id_jogador_remetente": 2,
+      "conteudo_texto": "Oi",
+      "timestamp_envio": "2026-09-24T00:33:11.900Z",
+      "created_at": "2026-09-24T00:33:11.901Z"
+    }
+  ]
+}

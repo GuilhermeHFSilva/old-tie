@@ -1,0 +1,25 @@
+{
+  "name": "jogo-da-velha-ws3",
+  "version": "1.0.0",
+  "description": "Jogo da Velha Multiplayer em Tempo Real com Express, WebSockets e Persistência JSON",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "tic-tac-toe",
+    "websocket",
+    "express",
+    "json-db",
+    "realtime"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ws": "^8.17.0"
+  }
+}
