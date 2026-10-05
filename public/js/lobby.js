@@ -86,6 +86,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Modo Solo (vs CPU)
+    const btnPlayCpu = document.getElementById('btn-play-cpu');
+    if (btnPlayCpu) {
+        btnPlayCpu.addEventListener('click', () => {
+            const playerName = getPlayerName();
+            if (!playerName) return;
+
+            window.socket.send('JOIN_ROOM', {
+                playerName,
+                roomCode: null,
+                gameMode: selectedMode,
+                isCpu: true
+            });
+        });
+    }
+
     // Criar Sala
     btnCreatePrivate.addEventListener('click', () => {
         const playerName = getPlayerName();

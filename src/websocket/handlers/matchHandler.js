@@ -16,6 +16,9 @@ export async function handleNewGame(ws) {
     if (!room) return;
 
     room.rematchVotes.add(jogadorId);
+    if (room.isCpu) {
+        room.rematchVotes.add(0);
+    }
 
     const activePlayers = room.players.filter(p => p.isConnected);
     const requiredVotes = activePlayers.length <= 2 ? activePlayers.length : Math.ceil(activePlayers.length / 2);

@@ -8,7 +8,7 @@ import { roomManager } from '../../game/RoomManager.js';
 import { GameEngine, GAME_MODES } from '../../game/GameEngine.js';
 import { jogadaRepo } from '../../database/jogadaRepo.js';
 import { partidaRepo } from '../../database/partidaRepo.js';
-import { broadcastBoardUpdate, startRoomTurnTimer } from './roomHandler.js';
+import { broadcastBoardUpdate, startRoomTurnTimer, triggerCpuMove } from './roomHandler.js';
 
 export async function handleMove(ws, payload) {
     const { roomCode, position, playerSymbol } = payload;
@@ -139,5 +139,9 @@ export async function handleMove(ws, payload) {
         roomManager.advanceTurn(room);
         broadcastBoardUpdate(room);
         startRoomTurnTimer(room.codigo);
+
+        if (room.isCpu && room.currentTurn === 'O' && room.status === 'EM_JOGO') {
+            triggerCpuMove(room);
+        }
     }
 }

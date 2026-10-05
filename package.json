@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test test/gameEngine.test.js test/roomManager.test.js test/websocketE2E.test.js"
+    "test": "node --test test/gameEngine.test.js test/roomManager.test.js test/cpuEngine.test.js test/websocketE2E.test.js"
   },
   "keywords": [
     "tic-tac-toe",

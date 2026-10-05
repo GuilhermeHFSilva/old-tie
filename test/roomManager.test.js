@@ -81,4 +81,24 @@ describe('RoomManager - Modos de Jogo e Multijogador', () => {
         roomManager.removePlayer(ws1);
         roomManager.removePlayer(ws2);
     });
+
+    test('deve criar e gerenciar sala no modo Solo (vs CPU)', () => {
+        const dummyWs = { readyState: 1, send: () => {} };
+        const room = roomManager.createCpuRoom('CPUTEST', 'Solo vs CPU', 10, 'PlayerSolo', dummyWs, 200, GAME_MODES.CLASSICO);
+
+        assert.equal(room.isCpu, true);
+        assert.equal(room.status, 'EM_JOGO');
+        assert.equal(room.players.length, 2);
+        assert.equal(room.players[0].nickname, 'PlayerSolo');
+        assert.equal(room.players[0].simbolo, 'X');
+        assert.equal(room.players[1].nickname, 'CPU (Bot 🤖)');
+        assert.equal(room.players[1].simbolo, 'O');
+
+        const resetRoom = roomManager.resetMatch('CPUTEST');
+        assert.equal(resetRoom.status, 'EM_JOGO');
+        assert.equal(resetRoom.players[0].simbolo, 'X');
+        assert.equal(resetRoom.players[1].simbolo, 'O');
+
+        roomManager.removePlayer(dummyWs);
+    });
 });

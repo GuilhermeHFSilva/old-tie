@@ -86,6 +86,82 @@ class RoomManager {
         return room;
     }
 
+    /**
+     * Cria uma sala para o Modo Solo (vs CPU).
+     */
+    createCpuRoom(codigo, nome, hostId, hostNickname, ws, dbSalaId, mode = GAME_MODES.CLASSICO) {
+        const validatedMode = Object.values(GAME_MODES).includes(mode) ? mode : GAME_MODES.CLASSICO;
+
+        const hostPlayer = {
+            id: hostId,
+            nickname: hostNickname,
+            simbolo: 'X',
+            ws,
+            isConnected: true,
+            isHost: true,
+            score: 0
+        };
+
+        const cpuPlayer = {
+            id: 0,
+            nickname: 'CPU (Bot 🤖)',
+            simbolo: 'O',
+            ws: null,
+            isConnected: true,
+            isHost: false,
+            score: 0
+        };
+
+        const room = {
+            dbSalaId,
+            codigo,
+            nome: nome || `Solo vs CPU (${hostNickname})`,
+            mode: validatedMode,
+            maxPlayers: 2,
+            status: 'EM_JOGO',
+            isCpu: true,
+            players: [hostPlayer, cpuPlayer],
+            board: GameEngine.createEmptyBoard(validatedMode),
+            currentTurn: 'X',
+            turnOrder: ['X', 'O'],
+            playerPieces: { 'X': [], 'O': [] },
+            turnTimeRemaining: 15,
+            turnInterval: null,
+            disconnectTimeout: null,
+            dbPartidaId: null,
+            rematchVotes: new Set(),
+            lastMove: null
+        };
+
+        Object.defineProperty(room, 'host', {
+            get: () => room.players[0] || null,
+            set: (val) => { if (room.players.length > 0) room.players[0] = val; }
+        });
+        Object.defineProperty(room, 'visitante', {
+            get: () => room.players[1] || null,
+            set: (val) => { if (room.players.length > 1) room.players[1] = val; }
+        });
+        Object.defineProperty(room, 'placarHost', {
+            get: () => room.players[0]?.score || 0,
+            set: (val) => { if (room.players[0]) room.players[0].score = val; }
+        });
+        Object.defineProperty(room, 'placarVisitante', {
+            get: () => room.players[1]?.score || 0,
+            set: (val) => { if (room.players[1]) room.players[1].score = val; }
+        });
+
+        this.rooms.set(codigo, room);
+        this.socketToPlayer.set(ws, {
+            salaCodigo: codigo,
+            jogadorId: hostId,
+            nickname: hostNickname,
+            simbolo: 'X',
+            isHost: true
+        });
+
+        return room;
+    }
+
     getRoom(codigo) {
         return this.rooms.get(codigo);
     }
@@ -114,6 +190,10 @@ class RoomManager {
                 isHost: existingPlayer.isHost
             });
             return { room, player: existingPlayer, reconnected: true, gameStarted: room.status === 'EM_JOGO' };
+        }
+
+        if (room.status === 'EM_JOGO') {
+            return { error: `[A partida na sala ${codigo} já está em andamento. Não é possível entrar agora.]` };
         }
 
         const activeCount = room.players.filter(p => p.isConnected).length;
@@ -271,7 +351,16 @@ class RoomManager {
         }
 
         // Rotação de símbolos ou ordem
-        if (room.players.length === 2) {
+        if (room.isCpu) {
+            room.players[0].simbolo = 'X';
+            room.players[1].simbolo = 'O';
+            if (room.players[0].ws) {
+                const info = this.socketToPlayer.get(room.players[0].ws);
+                if (info) info.simbolo = 'X';
+            }
+            room.turnOrder = ['X', 'O'];
+            room.currentTurn = 'X';
+        } else if (room.players.length === 2) {
             const p1 = room.players[0];
             const p2 = room.players[1];
             const tempSimbolo = p1.simbolo;

@@ -252,4 +252,88 @@ describe('WebSocket E2E - Modos de Jogo', () => {
             roomManager.stopTurnTimer(code);
         });
     });
+
+    test('Partida no Modo War Zone (max 4) com 3 jogadores iniciada manualmente pelo Host', async () => {
+        const c1 = createClient();
+        const c2 = createClient();
+        const c3 = createClient();
+        await Promise.all([c1.ready(), c2.ready(), c3.ready()]);
+
+        c1.send('JOIN_ROOM', { playerName: 'Player1', gameMode: 'WARZONE', maxPlayers: 4 });
+        const roomCreated = await c1.waitForEvent('ROOM_CREATED');
+        const code = roomCreated.payload.roomCode;
+
+        c2.send('JOIN_ROOM', { playerName: 'Player2', roomCode: code });
+        await c1.waitForEvent('BOARD_UPDATE');
+
+        c3.send('JOIN_ROOM', { playerName: 'Player3', roomCode: code });
+        const update3 = await c1.waitForEvent('BOARD_UPDATE');
+        assert.equal(update3.payload.status, 'AGUARDANDO');
+        assert.equal(update3.payload.players.length, 3);
+
+        // Host clica em Iniciar Partida Manualmente
+        c1.send('START_GAME', { roomCode: code });
+        let update;
+        do {
+            update = await c1.waitForEvent('BOARD_UPDATE');
+        } while (update.payload.status !== 'EM_JOGO');
+        assert.equal(update.payload.status, 'EM_JOGO');
+        assert.equal(update.payload.nextTurn, 'X');
+
+        // Player1 (X) joga em (0, 0)
+        c1.send('MOVE', { roomCode: code, position: { x: 0, y: 0 }, playerSymbol: 'X' });
+        do {
+            update = await c2.waitForEvent('BOARD_UPDATE');
+        } while (!update.payload.board || !update.payload.board['0,0']);
+        assert.equal(update.payload.nextTurn, 'O');
+
+        // Player2 (O) joga em (1, 0)
+        c2.send('MOVE', { roomCode: code, position: { x: 1, y: 0 }, playerSymbol: 'O' });
+        do {
+            update = await c3.waitForEvent('BOARD_UPDATE');
+        } while (!update.payload.board || !update.payload.board['1,0']);
+        assert.equal(update.payload.nextTurn, '△');
+
+        // Player3 (△) joga em (2, 0)
+        c3.send('MOVE', { roomCode: code, position: { x: 2, y: 0 }, playerSymbol: '△' });
+        do {
+            update = await c1.waitForEvent('BOARD_UPDATE');
+        } while (!update.payload.board || !update.payload.board['2,0']);
+        assert.equal(update.payload.nextTurn, 'X');
+
+        c1.close();
+        c2.close();
+        c3.close();
+        import('../src/game/RoomManager.js').then(({ roomManager }) => {
+            roomManager.stopTurnTimer(code);
+        });
+    });
+
+    test('Partida completa no Modo Solo (vs CPU)', async () => {
+        const c1 = createClient();
+        await c1.ready();
+
+        c1.send('JOIN_ROOM', { playerName: 'SoloPlayer', isCpu: true, gameMode: 'CLASSICO' });
+        const created = await c1.waitForEvent('ROOM_CREATED');
+        assert.equal(created.payload.status, 'EM_JOGO');
+        assert.equal(created.payload.players.length, 2);
+        assert.equal(created.payload.players[1].nickname, 'CPU (Bot 🤖)');
+
+        const code = created.payload.roomCode;
+        await c1.waitForEvent('BOARD_UPDATE'); // Consome o BOARD_UPDATE inicial da criação
+
+        // Player joga na posição 0
+        c1.send('MOVE', { roomCode: code, position: 0, playerSymbol: 'X' });
+        const boardAfterPlayer = await c1.waitForEvent('BOARD_UPDATE');
+        assert.equal(boardAfterPlayer.payload.board[0], 'X');
+
+        // CPU responde automaticamente após pequeno delay (400ms)
+        const boardAfterCpu = await c1.waitForEvent('BOARD_UPDATE');
+        assert.ok(boardAfterCpu.payload.board.includes('O'));
+
+        c1.close();
+        import('../src/game/RoomManager.js').then(({ roomManager }) => {
+            roomManager.stopTurnTimer(code);
+        });
+    });
 });

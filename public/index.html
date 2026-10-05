@@ -80,8 +80,13 @@
                     </div>
 
                     <button id="btn-quick-match" class="btn btn-success btn-block btn-lg">
-                        <span>JOGAR AGORA NO MODO SELECIONADO</span>
+                        <span>🎮 JOGAR ONLINE (MULTIPLAYER)</span>
                         <small id="quick-match-desc">Encontra ou cria sala no modo Clássico</small>
+                    </button>
+
+                    <button id="btn-play-cpu" class="btn btn-cpu btn-block btn-lg" style="margin-top: 10px;">
+                        <span>🤖 JOGAR CONTRA CPU (MODO SOLO)</span>
+                        <small id="cpu-match-desc">Desafie a Inteligência Artificial no modo selecionado</small>
                     </button>
 
                     <div class="divider">OU CRIE / ENTRE POR CÓDIGO</div>
@@ -111,22 +116,24 @@
                         <button id="btn-refresh-rooms" class="btn-icon" title="Atualizar">🔄</button>
                     </div>
 
-                    <table class="rooms-table">
-                        <thead>
-                            <tr>
-                                <th>CÓDIGO</th>
-                                <th>MODO</th>
-                                <th>HOST</th>
-                                <th>VAGAS</th>
-                                <th>AÇÃO</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rooms-table-body">
-                            <tr>
-                                <td colspan="5" class="empty-list">Buscando salas disponíveis...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="rooms-table-container">
+                        <table class="rooms-table">
+                            <thead>
+                                <tr>
+                                    <th>CÓDIGO</th>
+                                    <th>MODO</th>
+                                    <th>HOST</th>
+                                    <th>VAGAS</th>
+                                    <th>AÇÃO</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rooms-table-body">
+                                <tr>
+                                    <td colspan="5" class="empty-list">Buscando salas disponíveis...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>

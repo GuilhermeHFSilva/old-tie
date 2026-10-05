@@ -267,7 +267,9 @@ document.addEventListener('DOMContentLoaded', () => {
         currentAlzaimerState = data.alzaimer || null;
         winningLineCells = null;
 
-        myPlayerName = localStorage.getItem('velha_nickname') || myPlayerName || 'Você';
+        if (!myPlayerName) {
+            myPlayerName = localStorage.getItem('velha_nickname') || 'Você';
+        }
 
         // Atualiza símbolo do jogador a partir da lista
         if (data.players && Array.isArray(data.players)) {
@@ -403,7 +405,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (data.status === 'AGUARDANDO') {
             turnBanner.classList.add('opponent-turn');
-            turnBannerText.textContent = `Aguardando início da partida...`;
+            const connectedCount = data.players ? data.players.filter(p => p.isConnected).length : 1;
+            if (isHost && connectedCount >= 2) {
+                turnBannerText.textContent = `⏳ ${connectedCount}/${data.maxPlayers} jogadores no lobby. Clique em "INICIAR PARTIDA AGORA" para começar!`;
+            } else {
+                turnBannerText.textContent = `⏳ Aguardando anfitrião iniciar a partida (${connectedCount}/${data.maxPlayers} jogadores no lobby)...`;
+            }
             return;
         }
 

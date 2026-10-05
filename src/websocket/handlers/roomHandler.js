@@ -4,10 +4,12 @@
  */
 
 import { roomManager } from '../../game/RoomManager.js';
-import { GAME_MODES } from '../../game/GameEngine.js';
+import { GameEngine, GAME_MODES } from '../../game/GameEngine.js';
+import { CpuEngine } from '../../game/CpuEngine.js';
 import { jogadorRepo } from '../../database/jogadorRepo.js';
 import { salaRepo } from '../../database/salaRepo.js';
 import { partidaRepo } from '../../database/partidaRepo.js';
+import { jogadaRepo } from '../../database/jogadaRepo.js';
 
 export async function handleJoinRoom(ws, payload) {
     const { playerName, roomCode, gameMode, maxPlayers } = payload;
@@ -28,6 +30,39 @@ export async function handleJoinRoom(ws, payload) {
         let jogador = await jogadorRepo.buscarPorNickname(nameClean);
         if (!jogador) {
             jogador = await jogadorRepo.criar(nameClean);
+        }
+
+        // Modo Solo (vs CPU)
+        if (payload.isCpu) {
+            const newCode = 'CPU' + Math.random().toString(36).substring(2, 6).toUpperCase();
+            const dbSala = await salaRepo.criar(newCode, `Solo vs CPU (${nameClean})`, jogador.id, true, selectedMode, 2);
+            const room = roomManager.createCpuRoom(newCode, dbSala.nome, jogador.id, nameClean, ws, dbSala.id, selectedMode);
+
+            const dbPartida = await partidaRepo.criar(room.dbSalaId, 0, 0);
+            room.dbPartidaId = dbPartida.id;
+
+            ws.send(JSON.stringify({
+                type: 'ROOM_CREATED',
+                payload: {
+                    roomCode: newCode,
+                    roomName: dbSala.nome,
+                    playerSymbol: 'X',
+                    playerName: nameClean,
+                    mode: room.mode,
+                    maxPlayers: 2,
+                    status: 'EM_JOGO',
+                    players: room.players.map(p => ({
+                        nickname: p.nickname,
+                        simbolo: p.simbolo,
+                        isHost: p.isHost,
+                        score: p.score
+                    }))
+                }
+            }));
+
+            broadcastBoardUpdate(room);
+            startRoomTurnTimer(room.codigo);
+            return;
         }
 
         if (!codeClean) {
@@ -165,7 +200,12 @@ export async function handleStartGame(ws) {
 
 export async function handleListRooms(ws) {
     try {
-        const salas = await salaRepo.listarAtivas();
+        const dbSalas = await salaRepo.listarAtivas();
+        // Filtra apenas salas que realmente estão ativas na memória do RoomManager e não são privadas
+        const salas = dbSalas.filter(s => {
+            const activeRoom = roomManager.getRoom(s.codigo_sala);
+            return activeRoom && !s.privada && activeRoom.status !== 'FINALIZADA';
+        });
         ws.send(JSON.stringify({
             type: 'ROOM_LIST',
             payload: { salas }
@@ -198,6 +238,7 @@ export function handleDisconnect(ws) {
         // Se a partida estiver em andamento, atualiza turno e placa
         if (room.status === 'EM_JOGO') {
             broadcastBoardUpdate(room);
+            startRoomTurnTimer(room.codigo);
 
             // Se restar apenas 1 jogador ativo, inicia tolerância de 30s para vitória por W.O.
             const connectedPlayers = room.players.filter(p => p.isConnected);
@@ -271,9 +312,120 @@ export function broadcastBoardUpdate(room) {
 }
 
 export function startRoomTurnTimer(codigo) {
+    const room = roomManager.getRoom(codigo);
     roomManager.startTurnTimer(codigo, (updatedRoom) => {
         // Callback quando estoura 15s (Timeout Turn)
         broadcastBoardUpdate(updatedRoom);
-        startRoomTurnTimer(codigo);
+        if (updatedRoom && updatedRoom.isCpu && updatedRoom.currentTurn === 'O' && updatedRoom.status === 'EM_JOGO') {
+            triggerCpuMove(updatedRoom);
+        } else {
+            startRoomTurnTimer(codigo);
+        }
     });
+}
+
+export function triggerCpuMove(room) {
+    setTimeout(async () => {
+        if (!room || room.status !== 'EM_JOGO' || room.currentTurn !== 'O') return;
+
+        const cpuPos = CpuEngine.getBestMove(room);
+        const symbolToUse = 'O';
+
+        const validation = GameEngine.validateMove({
+            mode: room.mode,
+            board: room.board,
+            position: cpuPos,
+            currentTurn: room.currentTurn,
+            expectedSymbol: symbolToUse,
+            playerPieces: room.playerPieces
+        });
+
+        if (!validation.valid) return;
+
+        const moveResult = GameEngine.applyMove({
+            mode: room.mode,
+            board: room.board,
+            position: cpuPos,
+            symbol: symbolToUse,
+            playerPieces: room.playerPieces
+        });
+
+        if (room.mode === GAME_MODES.ALZAIMER) {
+            room.board = moveResult.board;
+            room.playerPieces = moveResult.playerPieces;
+        } else if (room.mode === GAME_MODES.INFINITO || room.mode === GAME_MODES.WARZONE) {
+            room.board = moveResult.board;
+            room.lastMove = moveResult.lastMove;
+        } else {
+            room.board = moveResult;
+        }
+
+        if (room.dbPartidaId) {
+            try {
+                const posFormatted = typeof cpuPos === 'object' ? `${cpuPos.x},${cpuPos.y}` : cpuPos;
+                await jogadaRepo.registrar(room.dbPartidaId, 0, posFormatted, symbolToUse);
+            } catch (err) {
+                console.error('Erro ao salvar jogada do CPU:', err);
+            }
+        }
+
+        const result = GameEngine.checkResult({
+            mode: room.mode,
+            board: room.board,
+            lastMove: room.lastMove
+        });
+
+        if (result.isOver) {
+            roomManager.stopTurnTimer(room.codigo);
+            room.status = 'FINALIZADA';
+
+            let winnerName = null;
+            const winnerSymbol = result.winnerSymbol;
+
+            if (winnerSymbol) {
+                const winnerPlayer = room.players.find(p => p.simbolo === winnerSymbol);
+                if (winnerPlayer) {
+                    winnerPlayer.score += 1;
+                    winnerName = winnerPlayer.nickname;
+                }
+            }
+
+            if (room.dbPartidaId) {
+                try {
+                    let statusRes = 'EMPATE';
+                    if (winnerSymbol) {
+                        statusRes = `VITORIA_${winnerSymbol}`;
+                    }
+                    await partidaRepo.finalizar(room.dbPartidaId, winnerName, statusRes, room.placarHost, room.placarVisitante);
+                } catch (err) {
+                    console.error('Erro ao finalizar partida no JSON:', err);
+                }
+            }
+
+            roomManager.broadcastToRoom(room.codigo, {
+                type: 'GAME_OVER',
+                payload: {
+                    mode: room.mode,
+                    board: room.board,
+                    winner: winnerName,
+                    winnerSymbol,
+                    winningLine: result.winningLine,
+                    isDraw: result.isDraw,
+                    players: room.players.map(p => ({
+                        nickname: p.nickname,
+                        simbolo: p.simbolo,
+                        score: p.score
+                    })),
+                    placarHost: room.players[0]?.score || 0,
+                    placarVisitante: room.players[1]?.score || 0,
+                    hostName: room.players[0] ? room.players[0].nickname : '',
+                    visitanteName: room.players[1] ? room.players[1].nickname : ''
+                }
+            });
+        } else {
+            roomManager.advanceTurn(room);
+            broadcastBoardUpdate(room);
+            startRoomTurnTimer(room.codigo);
+        }
+    }, 400);
 }
