@@ -322,3 +322,125 @@ input[type="text"]:focus {
     color: var(--color-o);
     font-weight: 700;
 }
+
+/* Seletor de Modo de Jogo */
+.mode-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.mode-card {
+    background: #0d1117;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text-main);
+}
+
+.mode-card:hover {
+    background: #161b22;
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.mode-card.active {
+    background: rgba(2, 132, 199, 0.15);
+    border-color: var(--btn-blue);
+    box-shadow: 0 0 12px rgba(2, 132, 199, 0.3);
+}
+
+.mode-card[data-mode="ALZAIMER"].active {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.mode-card[data-mode="WARZONE"].active {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+}
+
+.mode-card[data-mode="INFINITO"].active {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: #6366f1;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+}
+
+.mode-icon {
+    font-size: 1.3rem;
+    margin-bottom: 2px;
+}
+
+.mode-name {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.mode-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.2;
+}
+
+.select-styled {
+    width: 100%;
+    padding: 10px 14px;
+    background: #0d1117;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    outline: none;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.select-styled:focus {
+    border-color: var(--btn-blue);
+}
+
+/* Badges de Modo */
+.mode-badge-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.mode-badge-CLASSICO {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.mode-badge-INFINITO {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.mode-badge-ALZAIMER {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.mode-badge-WARZONE {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+

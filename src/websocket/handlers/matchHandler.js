@@ -1,3 +1,8 @@
+/**
+ * @file matchHandler.js
+ * Gerenciador de revanche e reinício de partida para todos os modos.
+ */
+
 import { roomManager } from '../../game/RoomManager.js';
 import { partidaRepo } from '../../database/partidaRepo.js';
 import { broadcastBoardUpdate, startRoomTurnTimer } from './roomHandler.js';
@@ -12,8 +17,11 @@ export async function handleNewGame(ws) {
 
     room.rematchVotes.add(jogadorId);
 
-    if (room.rematchVotes.size >= 2) {
-        // RF-07: Ambos aceitaram a revanche - inverte os símbolos e zera o tabuleiro mantendo a sala
+    const activePlayers = room.players.filter(p => p.isConnected);
+    const requiredVotes = activePlayers.length <= 2 ? activePlayers.length : Math.ceil(activePlayers.length / 2);
+
+    if (room.rematchVotes.size >= requiredVotes) {
+        // Revanche aceita - reseta o tabuleiro mantendo a pontuação e os jogadores
         const updatedRoom = roomManager.resetMatch(salaCodigo);
 
         try {
@@ -31,7 +39,7 @@ export async function handleNewGame(ws) {
             type: 'CHAT_MESSAGE',
             payload: {
                 sender: 'SISTEMA',
-                text: '🔄 Revanche aceita! Os símbolos foram invertidos. Boa sorte!',
+                text: '🔄 Revanche aceita! O tabuleiro foi resetado. Boa sorte!',
                 timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
             }
         });
@@ -41,7 +49,7 @@ export async function handleNewGame(ws) {
             type: 'REMATCH_REQUESTED',
             payload: {
                 sender: nickname,
-                message: `[${nickname} solicitou uma revanche!]`
+                message: `[${nickname} solicitou uma revanche! (${room.rematchVotes.size}/${requiredVotes})]`
             }
         }, ws);
     }

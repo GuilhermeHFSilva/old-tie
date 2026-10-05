@@ -1,7 +1,8 @@
 import {
     handleJoinRoom,
     handleListRooms,
-    handleDisconnect
+    handleDisconnect,
+    handleStartGame
 } from './handlers/roomHandler.js';
 import { handleMove } from './handlers/moveHandler.js';
 import { handleChatMessage } from './handlers/chatHandler.js';
@@ -21,7 +22,7 @@ export function routeWebSocketMessage(ws, messageRaw) {
 
     const { type, payload } = parsed;
 
-    // Trata mensagens onde os campos vêm na raiz do objeto JSON (conforme PDF Listings 1 e 2)
+    // Trata mensagens onde os campos vêm na raiz do objeto JSON
     const dataPayload = payload || parsed;
 
     switch (type) {
@@ -29,6 +30,9 @@ export function routeWebSocketMessage(ws, messageRaw) {
         case 'JOIN_GAME':
         case 'CREATE_ROOM':
             handleJoinRoom(ws, dataPayload);
+            break;
+        case 'START_GAME':
+            handleStartGame(ws);
             break;
         case 'MOVE':
             handleMove(ws, dataPayload);

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-Tac-Toe Multiplayer - Lobby de Salas (WS3)</title>
-    <meta name="description" content="Jogo da Velha Multiplayer em Tempo Real via WebSocket">
+    <meta name="description" content="Jogo da Velha Multiplayer em Tempo Real com Novos Modos: Clássico, Infinito, Alzaimer e War Zone">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,14 +28,14 @@
             </div>
         </header>
 
-        <!-- TELA 1: LOBBY DE SALAS (tela1-lobby.html) -->
+        <!-- TELA 1: LOBBY DE SALAS -->
         <section id="lobby-screen" class="screen active">
             <div class="lobby-grid">
                 <!-- Painel Esquerdo: Partida Rápida / Criar Sala -->
                 <div class="lobby-panel glass-panel">
                     <div class="panel-header">
                         <span class="icon">⚡</span>
-                        <h3>PARTIDA RÁPIDA (MATCHMAKING)</h3>
+                        <h3>CONFIGURAÇÃO & MATCHMAKING</h3>
                     </div>
 
                     <div class="form-group">
@@ -43,12 +43,48 @@
                         <input type="text" id="nickname-input" placeholder="Ex: Joao_Gamer" value="Joao_Gamer" maxlength="20">
                     </div>
 
+                    <!-- Seletor de Modo de Jogo -->
+                    <div class="form-group">
+                        <label>Escolha o Modo de Jogo:</label>
+                        <div class="mode-selector-grid">
+                            <button type="button" class="mode-card active" data-mode="CLASSICO">
+                                <span class="mode-icon">⚡</span>
+                                <span class="mode-name">Clássico</span>
+                                <span class="mode-desc">3x3 tradicional • Faça 3</span>
+                            </button>
+                            <button type="button" class="mode-card" data-mode="INFINITO">
+                                <span class="mode-icon">♾️</span>
+                                <span class="mode-name">Infinito</span>
+                                <span class="mode-desc">Grid aberto • Faça 5</span>
+                            </button>
+                            <button type="button" class="mode-card" data-mode="ALZAIMER">
+                                <span class="mode-icon">🧠</span>
+                                <span class="mode-name">Alzaimer</span>
+                                <span class="mode-desc">3 peças • 1ª pisca e some</span>
+                            </button>
+                            <button type="button" class="mode-card" data-mode="WARZONE">
+                                <span class="mode-icon">⚔️</span>
+                                <span class="mode-name">War Zone</span>
+                                <span class="mode-desc">Grid aberto • Até 4 jogadores</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Configurações adicionais para War Zone -->
+                    <div id="warzone-options-group" class="form-group" style="display: none;">
+                        <label for="warzone-max-players">Número Máximo de Jogadores:</label>
+                        <select id="warzone-max-players" class="select-styled">
+                            <option value="4" selected>4 Jogadores (❌ X, ⭕ O, 🔺 △, ⭐ ☆)</option>
+                            <option value="3">3 Jogadores (❌ X, ⭕ O, 🔺 △)</option>
+                        </select>
+                    </div>
+
                     <button id="btn-quick-match" class="btn btn-success btn-block btn-lg">
-                        <span>JOGAR AGORA (BUSCAR OPONENTE)</span>
-                        <small>Encontra um adversário aleatório online</small>
+                        <span>JOGAR AGORA NO MODO SELECIONADO</span>
+                        <small id="quick-match-desc">Encontra ou cria sala no modo Clássico</small>
                     </button>
 
-                    <div class="divider">OU</div>
+                    <div class="divider">OU CRIE / ENTRE POR CÓDIGO</div>
 
                     <div class="form-group">
                         <label for="room-code-input">Código da Sala (6 caracteres):</label>
@@ -57,7 +93,7 @@
 
                     <div class="lobby-btn-group">
                         <button id="btn-create-private" class="btn btn-primary btn-block">
-                            <span>➕ CRIAR SALA PRIVADA</span>
+                            <span>➕ CRIAR SALA</span>
                         </button>
                         <button id="btn-join-code" class="btn btn-secondary btn-block">
                             <span>🚀 ENTRAR COM CÓDIGO</span>
@@ -79,6 +115,7 @@
                         <thead>
                             <tr>
                                 <th>CÓDIGO</th>
+                                <th>MODO</th>
                                 <th>HOST</th>
                                 <th>VAGAS</th>
                                 <th>AÇÃO</th>
@@ -86,7 +123,7 @@
                         </thead>
                         <tbody id="rooms-table-body">
                             <tr>
-                                <td colspan="4" class="empty-list">Buscando salas disponíveis...</td>
+                                <td colspan="5" class="empty-list">Buscando salas disponíveis...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -94,22 +131,29 @@
             </div>
         </section>
 
-        <!-- TELA 2: ARENA DE JOGO (tela2-arena.html) -->
+        <!-- TELA 2: ARENA DE JOGO -->
         <section id="arena-screen" class="screen">
             <!-- Barra de Cabeçalho da Arena -->
             <div class="arena-header glass-panel">
                 <div class="room-title">
                     <span id="arena-room-code" class="title-badge">SALA ABC123</span>
+                    <span id="arena-mode-badge" class="mode-badge-pill">CLÁSSICO</span>
                     <span class="title-sub">— JOGO DA VELHA MULTIPLAYER</span>
                 </div>
-                <div id="arena-scoreboard" class="scoreboard-badge">
-                    PLACAR: <span id="score-host-name">Host</span> <b id="score-host-val">0</b> × <b id="score-visitante-val">0</b> <span id="score-visitante-name">Visitante</span>
+
+                <!-- Placar Dinâmico: 2 Jogadores ou Multijogador War Zone -->
+                <div id="arena-scoreboard-container" class="scoreboard-container">
+                    <div id="arena-scoreboard" class="scoreboard-badge">
+                        PLACAR: <span id="score-host-name">Host</span> <b id="score-host-val">0</b> × <b id="score-visitante-val">0</b> <span id="score-visitante-name">Visitante</span>
+                    </div>
+                    <div id="warzone-scoreboard" class="warzone-scoreboard" style="display: none;"></div>
                 </div>
+
                 <button id="btn-leave-arena" class="btn btn-danger btn-sm">Sair do Lobby</button>
             </div>
 
             <div class="arena-grid">
-                <!-- Tabuleiro 3x3 + Turn Banner -->
+                <!-- Área do Jogo -->
                 <div class="game-area glass-panel">
                     <!-- Turn Banner com Cronômetro de 15s -->
                     <div id="turn-banner" class="turn-banner">
@@ -117,8 +161,16 @@
                         <span id="turn-banner-text">VOCÊ É O 'X' | SUA VEZ DE JOGAR! (Cronômetro: 15s)</span>
                     </div>
 
-                    <!-- Matriz 3x3 -->
-                    <div class="board-wrapper">
+                    <!-- Botão de Início Rápido para Host no War Zone -->
+                    <div id="warzone-start-container" class="warzone-start-container" style="display: none;">
+                        <button id="btn-start-warzone" class="btn btn-success btn-lg">
+                            <span>🚀 INICIAR PARTIDA AGORA</span>
+                            <small id="warzone-ready-text">2 jogadores conectados no lobby</small>
+                        </button>
+                    </div>
+
+                    <!-- Tabuleiro 1: Matriz 3x3 (Clássico e Alzaimer) -->
+                    <div id="board-3x3-wrapper" class="board-wrapper">
                         <div id="board" class="board disabled">
                             <button class="cell" data-index="0"></button>
                             <button class="cell" data-index="1"></button>
@@ -130,6 +182,28 @@
                             <button class="cell" data-index="7"></button>
                             <button class="cell" data-index="8"></button>
                         </div>
+                    </div>
+
+                    <!-- Tabuleiro 2: Grid Infinito (Infinito e War Zone) -->
+                    <div id="board-infinite-wrapper" class="infinite-board-wrapper" style="display: none;">
+                        <div class="infinite-toolbar">
+                            <div class="infinite-info">
+                                <span class="infinite-badge">GRID INFINITO</span>
+                                <span class="infinite-rule">Faça 5 em linha para vencer</span>
+                                <span id="infinite-coords-hover" class="infinite-coords-hover">Coord: (0, 0)</span>
+                            </div>
+                            <div class="infinite-controls">
+                                <button id="btn-infinite-zoom-in" class="btn-ctrl" title="Zoom In">➕</button>
+                                <button id="btn-infinite-zoom-out" class="btn-ctrl" title="Zoom Out">➖</button>
+                                <button id="btn-infinite-center" class="btn-ctrl btn-ctrl-center" title="Centralizar no Jogo">🎯 Centralizar</button>
+                            </div>
+                        </div>
+                        <div id="infinite-viewport" class="infinite-viewport">
+                            <div id="infinite-canvas-grid" class="infinite-canvas-grid">
+                                <!-- As células infinitas serão injetadas dinamicamente aqui -->
+                            </div>
+                        </div>
+                        <p class="infinite-tip">💡 Dica: Arraste com o mouse para mover o tabuleiro. Clique em uma célula vazia para jogar.</p>
                     </div>
                 </div>
 
@@ -150,7 +224,7 @@
             </div>
         </section>
 
-        <!-- TELA 3: MODAL FIM DE JOGO / GAME OVER (tela3-gameover.html) -->
+        <!-- TELA 3: MODAL FIM DE JOGO / GAME OVER -->
         <div id="modal-gameover" class="modal-overlay">
             <div class="modal-card glass-panel">
                 <div class="modal-header-banner" id="modal-header-banner">
@@ -162,12 +236,18 @@
                 <div class="modal-summary-card">
                     <h4>RESUMO DA PARTIDA</h4>
                     <div class="summary-item">
+                        <span>Modo:</span>
+                        <strong id="summary-mode">Clássico</strong>
+                    </div>
+                    <div class="summary-item">
                         <span>Vencedor:</span>
                         <strong id="summary-winner">João_Gamer ('X')</strong>
                     </div>
                     <div class="summary-item">
-                        <span>Novo Placar Geral:</span>
-                        <strong id="summary-score" class="highlight-score">João_Gamer 1 x 0 Maria_S</strong>
+                        <span>Placar da Sala:</span>
+                        <div id="summary-score-list" class="summary-score-list">
+                            <strong id="summary-score" class="highlight-score">João_Gamer 1 x 0 Maria_S</strong>
+                        </div>
                     </div>
                 </div>
 

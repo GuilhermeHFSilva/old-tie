@@ -1,4 +1,4 @@
-/* Arena CSS - Matching Protótipos Figura 4, 5, 6 e 7 do PDF */
+/* Arena CSS - Suporte a Clássico, Infinito, Alzaimer e War Zone */
 
 .arena-header {
     display: flex;
@@ -6,12 +6,15 @@
     align-items: center;
     padding: 12px 20px;
     margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .room-title {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .title-badge {
@@ -23,10 +26,32 @@
     border-radius: 4px;
 }
 
+.mode-badge-pill {
+    background: #6366f1;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.mode-badge-pill.CLASSICO { background: #0284c7; }
+.mode-badge-pill.INFINITO { background: #6366f1; }
+.mode-badge-pill.ALZAIMER { background: #d97706; }
+.mode-badge-pill.WARZONE { background: #dc2626; }
+
 .title-sub {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--text-muted);
+}
+
+.scoreboard-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .scoreboard-badge {
@@ -43,7 +68,46 @@
     font-size: 1rem;
 }
 
-/* Arena Grid */
+/* Placar Multijogador para War Zone */
+.warzone-scoreboard {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.player-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    font-weight: 700;
+    transition: var(--transition);
+}
+
+.player-chip.active-turn {
+    border-color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.12);
+}
+
+.player-chip .chip-symbol {
+    font-size: 1rem;
+}
+
+.player-chip .chip-score {
+    color: #10b981;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+}
+
+/* Arena Grid Layout */
 .arena-grid {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -51,20 +115,20 @@
     flex: 1;
 }
 
-@media (max-width: 850px) {
+@media (max-width: 900px) {
     .arena-grid {
         grid-template-columns: 1fr;
     }
 }
 
 .game-area {
-    padding: 24px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-/* Turn Banner (Figura 4 & 5) */
+/* Turn Banner */
 .turn-banner {
     width: 100%;
     background: #064e3b;
@@ -78,7 +142,9 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+    transition: var(--transition);
 }
 
 .turn-banner.opponent-turn {
@@ -87,7 +153,22 @@
     color: #c7d2fe;
 }
 
-/* Board 3x3 */
+.turn-banner.alzaimer-warning {
+    background: #78350f;
+    border-color: #f59e0b;
+    color: #fef3c7;
+    animation: pulse 1s infinite alternate;
+}
+
+/* Container de início de War Zone */
+.warzone-start-container {
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+/* Tabuleiro 3x3 (Clássico & Alzaimer) */
 .board-wrapper {
     width: 100%;
     max-width: 340px;
@@ -109,6 +190,7 @@
 }
 
 .cell {
+    position: relative;
     background: #0d1117;
     border: 2px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -124,27 +206,91 @@
     user-select: none;
 }
 
-.cell:hover:not(.x):not(.o) {
+.cell:hover:not(.x):not(.o):not(.triangle):not(.star):not(.fading) {
     background: #161b22;
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-.cell.x {
+/* Estilos de Símbolos */
+.cell.x, .infinite-cell.x {
     color: var(--color-x);
     text-shadow: 0 0 12px var(--color-x-glow);
     cursor: default;
 }
 
-.cell.o {
+.cell.o, .infinite-cell.o {
     color: var(--color-o);
     text-shadow: 0 0 12px var(--color-o-glow);
     cursor: default;
 }
 
-.cell.winning-cell {
-    background: rgba(16, 185, 129, 0.2);
-    border-color: #10b981;
-    animation: pulse 1s infinite alternate;
+.cell.triangle, .infinite-cell.triangle {
+    color: #10b981;
+    text-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
+    cursor: default;
+}
+
+.cell.star, .infinite-cell.star {
+    color: #f59e0b;
+    text-shadow: 0 0 12px rgba(245, 158, 11, 0.45);
+    cursor: default;
+}
+
+.cell.winning-cell, .infinite-cell.winning-cell {
+    background: rgba(16, 185, 129, 0.25) !important;
+    border-color: #10b981 !important;
+    animation: pulse 0.8s infinite alternate !important;
+}
+
+/* Modo Alzaimer: Badge de ordem e peça piscando/expirando */
+.cell-badge {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid var(--border-color);
+    padding: 1px 6px;
+    border-radius: 8px;
+    color: #cbd5e1;
+    pointer-events: none;
+}
+
+.cell.fading {
+    animation: alzaimer-blink 0.8s infinite alternate;
+    cursor: not-allowed !important;
+    border-color: #ef4444;
+}
+
+.cell.fading .cell-badge {
+    background: #dc2626;
+    color: #fff;
+    border-color: #f87171;
+    animation: pulse 0.5s infinite alternate;
+}
+
+@keyframes alzaimer-blink {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+        border-color: #ef4444;
+        box-shadow: 0 0 14px rgba(239, 68, 68, 0.8);
+        background: rgba(239, 68, 68, 0.2);
+    }
+    50% {
+        opacity: 0.25;
+        transform: scale(0.95);
+        border-color: #f97316;
+        box-shadow: 0 0 4px rgba(249, 115, 22, 0.3);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.02);
+        border-color: #ef4444;
+        box-shadow: 0 0 16px rgba(239, 68, 68, 0.9);
+        background: rgba(239, 68, 68, 0.25);
+    }
 }
 
 @keyframes pulse {
@@ -152,7 +298,156 @@
     to { transform: scale(1.04); }
 }
 
-/* Chat Module (Figura 4 & 5) */
+/* TABULEIRO INFINITO (Infinito & War Zone) */
+.infinite-board-wrapper {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    background: #090d13;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.infinite-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: #111620;
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.infinite-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+}
+
+.infinite-badge {
+    background: #6366f1;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.infinite-rule {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.infinite-coords-hover {
+    color: #38bdf8;
+    font-family: monospace;
+    font-weight: 700;
+}
+
+.infinite-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-ctrl {
+    background: #1f2937;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-ctrl:hover {
+    background: #374151;
+    border-color: #6b7280;
+}
+
+.btn-ctrl-center {
+    background: #0284c7;
+    border-color: #0369a1;
+}
+.btn-ctrl-center:hover {
+    background: #0369a1;
+}
+
+.infinite-viewport {
+    width: 100%;
+    height: 440px;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    background-color: #0b0f17;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    user-select: none;
+}
+
+.infinite-viewport.dragging {
+    cursor: grabbing;
+}
+
+.infinite-canvas-grid {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    gap: 4px;
+    will-change: transform;
+}
+
+.infinite-cell {
+    width: 42px;
+    height: 42px;
+    background: rgba(13, 17, 23, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+    user-select: none;
+}
+
+.infinite-cell:hover:not(.occupied) {
+    background: rgba(31, 41, 55, 0.95);
+    border-color: rgba(56, 189, 248, 0.6);
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+}
+
+.infinite-cell.occupied {
+    cursor: default;
+}
+
+.infinite-cell.center-cell {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.infinite-tip {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    text-align: center;
+    background: #0d1117;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Chat Module */
 .chat-area {
     padding: 16px;
     display: flex;
@@ -213,7 +508,7 @@
     border-top: 1px solid var(--border-color);
 }
 
-/* Modal Game Over (Figura 6 & 7) */
+/* Modal Game Over */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -283,6 +578,13 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 6px;
+}
+
+.summary-score-list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
 }
 
 .highlight-score {

@@ -1,5 +1,6 @@
 /**
- * Controller da Tela 1 (Lobby Principal & Seleção de Salas - Figura 2 & 3)
+ * @file lobby.js
+ * Controller da Tela 1 (Lobby Principal, Seleção de Modo de Jogo & Listagem de Salas)
  */
 document.addEventListener('DOMContentLoaded', () => {
     const nicknameInput = document.getElementById('nickname-input');
@@ -10,6 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRefreshRooms = document.getElementById('btn-refresh-rooms');
     const roomsTableBody = document.getElementById('rooms-table-body');
     const connectionStatus = document.getElementById('connection-status');
+    const modeCards = document.querySelectorAll('.mode-card');
+    const warzoneOptionsGroup = document.getElementById('warzone-options-group');
+    const warzoneMaxPlayersSelect = document.getElementById('warzone-max-players');
+    const quickMatchDesc = document.getElementById('quick-match-desc');
+
+    let selectedMode = 'CLASSICO';
 
     // Recupera apelido salvo
     const savedNick = localStorage.getItem('velha_nickname');
@@ -17,7 +24,44 @@ document.addEventListener('DOMContentLoaded', () => {
         nicknameInput.value = savedNick;
     }
 
-    // Status Conexão
+    // Seleção de Modos de Jogo
+    modeCards.forEach(card => {
+        card.addEventListener('click', () => {
+            modeCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            selectedMode = card.getAttribute('data-mode') || 'CLASSICO';
+
+            if (selectedMode === 'WARZONE') {
+                warzoneOptionsGroup.style.display = 'block';
+            } else {
+                warzoneOptionsGroup.style.display = 'none';
+            }
+
+            updateQuickMatchDescription(selectedMode);
+        });
+    });
+
+    function updateQuickMatchDescription(mode) {
+        switch (mode) {
+            case 'CLASSICO':
+                quickMatchDesc.textContent = 'Encontra ou cria sala no modo Clássico 3x3';
+                break;
+            case 'INFINITO':
+                quickMatchDesc.textContent = 'Encontra ou cria sala no Grid Infinito (Faça 5)';
+                break;
+            case 'ALZAIMER':
+                quickMatchDesc.textContent = 'Encontra ou cria sala no modo Alzaimer (3 peças ativas)';
+                break;
+            case 'WARZONE':
+                quickMatchDesc.textContent = 'Encontra ou cria sala na War Zone (Multijogador)';
+                break;
+            default:
+                quickMatchDesc.textContent = 'Encontra ou cria sala no modo selecionado';
+                break;
+        }
+    }
+
+    // Status da Conexão
     window.socket.on('connection_change', (data) => {
         if (data.status === 'online') {
             connectionStatus.className = 'connection-status online';
@@ -28,24 +72,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Partida Rápida (Matchmaking)
+    // Partida Rápida
     btnQuickMatch.addEventListener('click', () => {
         const playerName = getPlayerName();
         if (!playerName) return;
-        window.socket.send('JOIN_ROOM', { playerName, roomCode: null });
+
+        const maxPlayers = selectedMode === 'WARZONE' ? parseInt(warzoneMaxPlayersSelect.value, 10) : 2;
+        window.socket.send('JOIN_ROOM', {
+            playerName,
+            roomCode: null,
+            gameMode: selectedMode,
+            maxPlayers
+        });
     });
 
-    // Criar Sala Privada
+    // Criar Sala
     btnCreatePrivate.addEventListener('click', () => {
         const playerName = getPlayerName();
         if (!playerName) return;
-        window.socket.send('JOIN_ROOM', { playerName, roomCode: null });
+
+        const maxPlayers = selectedMode === 'WARZONE' ? parseInt(warzoneMaxPlayersSelect.value, 10) : 2;
+        window.socket.send('JOIN_ROOM', {
+            playerName,
+            roomCode: null,
+            gameMode: selectedMode,
+            maxPlayers
+        });
     });
 
     // Entrar por Código
     btnJoinCode.addEventListener('click', () => {
         const playerName = getPlayerName();
         if (!playerName) return;
+
         const roomCode = roomCodeInput.value.trim().toUpperCase();
         if (!roomCode) return alert('Por favor, digite o código de 6 caracteres da sala.');
 
@@ -77,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!salas || salas.length === 0) {
             roomsTableBody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="empty-list">Nenhuma sala ativa no momento. Clique em Criar Sala!</td>
+                    <td colspan="5" class="empty-list">Nenhuma sala ativa no momento. Escolha o modo e crie uma sala!</td>
                 </tr>
             `;
             return;
@@ -86,12 +145,15 @@ document.addEventListener('DOMContentLoaded', () => {
         roomsTableBody.innerHTML = '';
         salas.forEach(sala => {
             const tr = document.createElement('tr');
-            const isFull = sala.id_jogador_visitante !== null;
+            const modo = sala.modo_jogo || 'CLASSICO';
+            const maxPlayers = sala.max_jogadores || 2;
+            const isFull = sala.status_sala === 'EM_JOGO' || (sala.vagas && sala.vagas.includes('Cheia'));
             const vagasClass = isFull ? 'vagas-full' : 'vagas-tag';
-            const vagasText = isFull ? '2/2 (Cheia)' : '1/2 (Entrar ↵)';
+            const vagasText = isFull ? `${maxPlayers}/${maxPlayers} (Cheia)` : (sala.vagas || `1/${maxPlayers}`);
 
             tr.innerHTML = `
                 <td><b>${sala.codigo_sala}</b></td>
+                <td><span class="mode-badge-tag mode-badge-${modo}">${formatModeName(modo)}</span></td>
                 <td>${escapeHtml(sala.criador_nickname || 'Host')}</td>
                 <td><span class="${vagasClass}">${vagasText}</span></td>
                 <td>
@@ -111,6 +173,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!playerName) return;
         window.socket.send('JOIN_ROOM', { playerName, roomCode });
     };
+
+    function formatModeName(mode) {
+        switch (mode) {
+            case 'CLASSICO': return 'Clássico';
+            case 'INFINITO': return 'Infinito';
+            case 'ALZAIMER': return 'Alzaimer';
+            case 'WARZONE': return 'War Zone';
+            default: return mode || 'Clássico';
+        }
+    }
 
     function escapeHtml(str) {
         return String(str).replace(/[&<>"']/g, function(m) {
